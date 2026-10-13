@@ -1,0 +1,9 @@
+.venv/
+target/
+dist/
+*.so
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+benchmarks/local/

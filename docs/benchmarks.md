@@ -98,13 +98,13 @@ The statistical suite simulates 100 independent sample paths per configuration
 (`seed = 20261012`) on a one-day horizon ($`T = 1`$) with ground-truth
 covariance rate
 
-$$
+```math
 \Sigma = \begin{bmatrix}
 1.0 & 0.6 & 0.25 \\
 0.6 & 1.5 & -0.1 \\
 0.25 & -0.1 & 0.8
 \end{bmatrix}.
-$$
+```
 
 Reported values are the root-mean-square error (RMSE) across replications
 $`\pm`$ one delta-method Monte Carlo standard error (which measures finite

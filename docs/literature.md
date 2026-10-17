@@ -15,9 +15,9 @@ Let $`X(t) \in \mathbb{R}^N`$ denote the latent vector of log prices for $`N`$
 assets over continuous time $`t \in \mathbb{R}`$, governed by the
 constant-coefficient Itô diffusion
 
-$$
+```math
 X(t) = X(0) + \mu t + L W(t), \qquad \Sigma = L L^\top \in \mathbb{R}^{N \times N},
-$$
+```
 
 where:
 
@@ -32,32 +32,32 @@ $`X(u) - X(s)`$ is Gaussian with mean $`\mu (u - s)`$ and covariance
 $`\Sigma (u - s)`$. More generally, for two half-open intervals
 $`I_e = [s_e, u_e)`$ and $`I_f = [s_f, u_f)`$ with overlap duration
 
-$$
+```math
 o_{ef} = \lvert I_e \cap I_f \rvert = \max(0, \min(u_e, u_f) - \max(s_e, s_f)),
-$$
+```
 
 the independent-increments property of Brownian motion implies
 
-$$
+```math
 \mathrm{Cov}\!\big(X_a(u_e) - X_a(s_e),\, X_b(u_f) - X_b(s_f)\big) = o_{ef}\,\Sigma_{ab}.
-$$
+```
 
 ### Asynchronous noisy observations
 
 Each asset $`a \in \{0, \dots, N-1\}`$ is observed at a sequence of strictly
 increasing timestamps
 
-$$
+```math
 t_{a,0} < t_{a,1} < \dots < t_{a,m_a}.
-$$
+```
 
 The observation schedules $`\mathcal{T} = \{\{t_{a,k}\}_{k=0}^{m_a}\}_{a=0}^{N-1}`$
 need not coincide across assets. At timestamp $`t_{a,k}`$, we observe the noisy
 log price
 
-$$
+```math
 Y_a(t_{a,k}) = X_a(t_{a,k}) + \varepsilon_{a,k},
-$$
+```
 
 where the point measurement errors $`\varepsilon_{a,k}`$ satisfy the following
 standing assumptions:
@@ -76,22 +76,22 @@ standing assumptions:
 For each asset $`a`$, consecutive retained observations $`(t_{a,k-1}, t_{a,k})`$
 ($`k = 1, \dots, m_a`$) define a half-open increment interval
 
-$$
+```math
 I_e = [s_e, u_e) = [t_{a,k-1}, t_{a,k}), \qquad \ell_e = u_e - s_e > 0,
-$$
+```
 
 with observed return $`r_e = Y_a(u_e) - Y_a(s_e)`$ and drift-centered return
 
-$$
+```math
 \tilde{r}_e = r_e - \mu_a \ell_e = \big(X_a(u_e) - X_a(s_e) - \mu_a \ell_e\big) + \big(\varepsilon_{a,k} - \varepsilon_{a,k-1}\big).
-$$
+```
 
 Let $`\mathcal{I}_a`$ denote the set of active increments for asset $`a`$, and
 let
 
-$$
+```math
 \mathcal{P}_{ab} = \big\{(e, f) \in \mathcal{I}_a \times \mathcal{I}_b : o_{ef} > 0\big\}
-$$
+```
 
 denote the set of overlapping increment pairs between assets $`a`$ and $`b`$.
 Two geometric properties of the half-open intervals $`\mathcal{I}_a`$ simplify
@@ -109,10 +109,10 @@ the structure of $`\mathcal{P}_{ab}`$:
   $`\{I_e \cap I_f\}_{(e,f) \in \mathcal{P}_{ab}}`$ are pairwise disjoint and
   partition the joint observation support:
 
-$$
+```math
 \bigsqcup_{(e,f) \in \mathcal{P}_{ab}} (I_e \cap I_f)
 = \left(\bigsqcup_{e \in \mathcal{I}_a} I_e\right) \cap \left(\bigsqcup_{f \in \mathcal{I}_b} I_f\right).
-$$
+```
 
 In particular, the sum of unweighted overlaps
 $`\sum_{(e,f) \in \mathcal{P}_{ab}} o_{ef}`$ is the Lebesgue measure of the time
@@ -140,40 +140,40 @@ errors given $`\mathcal{T}`$. Under independent point errors:
 Consequently, for every overlapping pair $`(e, f) \in \mathcal{P}_{ab}`$, the
 noise-adjusted centered product
 
-$$
+```math
 Z_{ef} = (r_e - \mu_a \ell_e)(r_f - \mu_b \ell_f) - \Gamma_{ef}, \qquad
 \Gamma_{ef} = \begin{cases}
 2\tau_a^2 & \text{if } a = b \text{ (so } e = f\text{)}, \\
 0 & \text{if } a \neq b,
 \end{cases}
-$$
+```
 
 satisfies the conditional moment identity
 
-$$
+```math
 \mathbb{E}[Z_{ef} \mid \mathcal{T}] = o_{ef}\,\Sigma_{ab}.
-$$
+```
 
 ### General weighted linear overlap estimators
 
 Given any nonnegative timestamp-measurable weights $`w_{ef}`$ and pair-specific
 factors $`h_{ef} > 0`$, any linear estimator of the form
 
-$$
+```math
 \widehat{\Sigma}_{ab}(h)
 = \frac{\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} h_{ef} o_{ef} Z_{ef}}
        {\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} h_{ef} o_{ef}^2}
-$$
+```
 
 is conditionally unbiased for $`\Sigma_{ab}`$ given $`\mathcal{T}`$ whenever the
 denominator is positive ($`\mathcal{P}_{ab} \neq \emptyset`$):
 
-$$
+```math
 \mathbb{E}\!\left[\widehat{\Sigma}_{ab}(h) \,\middle|\, \mathcal{T}\right]
 = \frac{\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} h_{ef} o_{ef} (o_{ef} \Sigma_{ab})}
        {\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} h_{ef} o_{ef}^2}
 = \Sigma_{ab}.
-$$
+```
 
 The package implements two canonical choices of $`h_{ef}`$.
 
@@ -182,11 +182,11 @@ The package implements two canonical choices of $`h_{ef}`$.
 Setting $`h_{ef} = 1 / o_{ef}`$ yields the Hayashi–Yoshida covariance-rate
 estimator
 
-$$
+```math
 \widehat{\Sigma}^{\mathrm{hy}}_{ab}
 = \frac{\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} Z_{ef}}
        {\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} o_{ef}}.
-$$
+```
 
 When $`w_{ef} \equiv 1`$ and $`\mu = 0, \tau = 0`$, the numerator
 $`\sum_{(e,f) \in \mathcal{P}_{ab}} r_e r_f`$ is the integrated covariance
@@ -201,51 +201,51 @@ exponential decay $`w_{ef}`$.
 On the diagonal ($`a = b`$), $`\mathcal{P}_{aa} = \{(e, e)\}`$ and
 $`o_{ee} = \ell_e`$, so
 
-$$
+```math
 \widehat{\Sigma}^{\mathrm{hy}}_{aa}
 = \frac{\sum_{e \in \mathcal{I}_a} w_{ee} (\tilde{r}_e^2 - 2\tau_a^2)}
        {\sum_{e \in \mathcal{I}_a} w_{ee} \ell_e}.
-$$
+```
 
 ### Duration-normalized overlap estimator (`method="overlap"`)
 
 Setting $`h_{ef} = 1 / (\ell_e \ell_f)`$ yields the duration-normalized overlap
 estimator
 
-$$
+```math
 \widehat{\Sigma}^{\mathrm{overlap}}_{ab}
 = \frac{\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} \frac{o_{ef}}{\ell_e \ell_f} Z_{ef}}
        {\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} \frac{o_{ef}^2}{\ell_e \ell_f}}.
-$$
+```
 
 To see the statistical motivation for $`h_{ef} = (\ell_e \ell_f)^{-1}`$, define
 the duration-standardized returns and the dimensionless overlap fraction
 
-$$
+```math
 \xi_e = \frac{\tilde{r}_e}{\sqrt{\ell_e}}, \qquad
 \xi_f = \frac{\tilde{r}_f}{\sqrt{\ell_f}}, \qquad
 \rho_{ef} = \frac{o_{ef}}{\sqrt{\ell_e \ell_f}} \in (0, 1].
-$$
+```
 
 In the noiseless model ($`\tau = 0`$), $`\xi_e \sim \mathcal{N}(0, \Sigma_{aa})`$
 and $`\xi_f \sim \mathcal{N}(0, \Sigma_{bb})`$ have constant variances across
 all increments regardless of their durations $`\ell_e, \ell_f`$, and their
 product satisfies
 
-$$
+```math
 \mathbb{E}[\xi_e \xi_f \mid \mathcal{T}] = \Sigma_{ab} \rho_{ef}, \qquad
 \mathrm{Var}(\xi_e \xi_f \mid \mathcal{T}) = \Sigma_{aa} \Sigma_{bb} + \Sigma_{ab}^2 \rho_{ef}^2.
-$$
+```
 
 In terms of $`\xi_e, \xi_f`$ and $`\rho_{ef}`$, the estimator is the weighted
 least-squares regression slope through the origin of the noise-adjusted
 standardized product on $`\rho_{ef}`$:
 
-$$
+```math
 \widehat{\Sigma}^{\mathrm{overlap}}_{ab}
 = \frac{\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} \rho_{ef} \left(\xi_e \xi_f - \frac{\Gamma_{ef}}{\sqrt{\ell_e \ell_f}}\right)}
        {\sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef} \rho_{ef}^2}.
-$$
+```
 
 Two special cases illustrate its behavior:
 
@@ -259,11 +259,11 @@ Two special cases illustrate its behavior:
 - **Diagonal efficiency under irregular spacing**: On the diagonal
   ($`a = b, e = f`$), $`\rho_{ee} = 1`$, so
 
-$$
+```math
 \widehat{\Sigma}^{\mathrm{overlap}}_{aa}
 = \frac{\sum_{e \in \mathcal{I}_a} w_{ee} \frac{\tilde{r}_e^2 - 2\tau_a^2}{\ell_e}}
        {\sum_{e \in \mathcal{I}_a} w_{ee}}.
-$$
+```
 
 When $`\tau_a = 0`$ and $`w_{ee} = 1`$, the standardized squared returns
 $`\tilde{r}_e^2 / \ell_e \sim \Sigma_{aa} \chi^2_1`$ are independent and
@@ -291,11 +291,11 @@ $`\varepsilon_{a,k}`$ are also Gaussian (and independent of $`W`$ and
 $`\mathcal{T}`$), the pair $`(x, y)`$ is jointly Gaussian conditional on
 $`\mathcal{T}`$ with zero mean and block covariance matrices
 
-$$
+```math
 A = \mathrm{Cov}(x \mid \mathcal{T}), \qquad
 B = \mathrm{Cov}(y \mid \mathcal{T}), \qquad
 C = \mathrm{Cov}(x, y \mid \mathcal{T}).
-$$
+```
 
 Here $`A_{ee'} = \Sigma_{aa} \ell_e \mathbf{1}_{\{e=e'\}} + \Gamma_{ee'}`$ is
 tridiagonal with diagonal $`\Sigma_{aa}\ell_e + 2\tau_a^2`$ and first
@@ -312,10 +312,10 @@ $`S = x^\top W y - \text{const}`$ for a sparse weight matrix
 $`W \in \mathbb{R}^{m_a \times m_b}`$ supported on $`\mathcal{P}_{ab}`$. By
 Isserlis' (Wick's) theorem for centered jointly Gaussian vectors,
 
-$$
+```math
 \mathrm{Var}(S \mid \mathcal{T})
 = \mathrm{tr}(W^\top A W B) + \mathrm{tr}\!\big((W^\top C)^2\big).
-$$
+```
 
 Dividing $`\mathrm{Var}(S \mid \mathcal{T})`$ by the squared estimator
 denominator yields the exact conditional variance of $`\widehat{\Sigma}_{ab}`$.
@@ -342,9 +342,9 @@ timestamp $`t`$ to an overlapping pair $`(e, f) \in \mathcal{P}_{ab}`$ is
 anchored at the midpoint $`m_{ef} = \max(s_e, s_f) + \frac{1}{2} o_{ef}`$ of the
 overlap interval $`I_e \cap I_f`$:
 
-$$
+```math
 w_{ef}(t) = 2^{-(t - m_{ef}) / H} = \exp\!\left(-\frac{\ln 2}{H}(t - m_{ef})\right).
-$$
+```
 
 Because $`m_{ef}`$ depends only on the interval endpoints, advancing the
 watermark from $`t`$ to $`t' \ge t`$ scales every historical weight by the
@@ -357,19 +357,19 @@ Brownian motion $`W`$ and point errors $`\varepsilon`$), the conditional
 expectation of a return product is the integrated covariance over the
 intersection:
 
-$$
+```math
 \mathbb{E}[Z_{ef} \mid \mathcal{T}, \Sigma(\cdot)] = \int_{I_e \cap I_f} \Sigma_{ab}(s)\,ds.
-$$
+```
 
 Consequently, under time-varying volatility,
 $`\widehat{\Sigma}^{\mathrm{hy}}_{ab}`$ and
 $`\widehat{\Sigma}^{\mathrm{overlap}}_{ab}`$ estimate weighted averages of
 $`\Sigma_{ab}(s)`$ against two different pair-dependent temporal kernels:
 
-$$
+```math
 K^{\mathrm{hy}}_{ab}(s) \propto \sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef}(t)\,\mathbf{1}_{I_e \cap I_f}(s), \qquad
 K^{\mathrm{overlap}}_{ab}(s) \propto \sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef}(t)\,\frac{o_{ef}}{\ell_e \ell_f}\,\mathbf{1}_{I_e \cap I_f}(s).
-$$
+```
 
 Neither estimator recovers an instantaneous spot covariance $`\Sigma(t)`$
 without a local stationarity assumption over the effective support of the
@@ -402,9 +402,9 @@ the factor $`o_{ef} / \tilde{o}_{ef} > 1`$ whenever $`\Sigma_{ab} \neq 0`$.
 Under additive point noise with variance $`\tau_a^2`$, each squared return of
 asset $`a`$ has conditional expectation
 
-$$
+```math
 \mathbb{E}[\tilde{r}_e^2 \mid \mathcal{T}] = \Sigma_{aa}\ell_e + 2\tau_a^2.
-$$
+```
 
 If $`n`$ increments are observed over a fixed horizon $`T`$, the uncorrected sum
 of squared returns $`\sum_{e=1}^n \tilde{r}_e^2`$ has expectation
@@ -422,17 +422,17 @@ errors $`\varepsilon_{a,k} - \varepsilon_{a,k-1}`$ and
 $`\varepsilon_{a,k+1} - \varepsilon_{a,k}`$ share only the common middle
 endpoint error $`\varepsilon_{a,k}`$ with opposite signs. Therefore,
 
-$$
+```math
 \mathbb{E}[\tilde{r}_{a,k} \tilde{r}_{a,k+1} \mid \mathcal{T}]
 = \mathbb{E}\!\big[(\varepsilon_{a,k} - \varepsilon_{a,k-1})(\varepsilon_{a,k+1} - \varepsilon_{a,k}) \,\big|\, \mathcal{T}\big]
 = -\tau_a^2.
-$$
+```
 
 The function `estimate_noise` evaluates the corresponding sample moment
 
-$$
+```math
 \widehat{\tau}_a^2 = -\frac{1}{m_a - 1} \sum_{k=1}^{m_a - 1} \tilde{r}_{a,k} \tilde{r}_{a,k+1}.
-$$
+```
 
 In finite samples where latent volatility dominates microstructure noise,
 $`\widehat{\tau}_a^2`$ can be negative; `estimate_noise` returns the signed
@@ -457,18 +457,18 @@ off-diagonal $`-\tau_a^2`$, $`B = \mathrm{Cov}(\tilde{r}_b)`$ is analogous, and
 $`C = \Sigma_{ab} \Delta I_n`$. Applying the Gaussian variance formula with
 $`W = T^{-1} I_n`$ gives the exact finite-$`n`$ variance
 
-$$
+```math
 \mathrm{Var}(\widehat{\Sigma}_{ab})
 = \frac{1}{T^2} \Big(\mathrm{tr}(A B) + \mathrm{tr}(C^2)\Big)
 = \frac{1}{T^2} \left[n (\Sigma_{aa}\Delta + 2\tau_a^2)(\Sigma_{bb}\Delta + 2\tau_b^2) + 2(n - 1)\tau_a^2 \tau_b^2 + n \Sigma_{ab}^2 \Delta^2\right].
-$$
+```
 
 Substituting $`\Delta = T / n`$ and collecting powers of $`n`$ yields
 
-$$
+```math
 \mathrm{Var}(\widehat{\Sigma}_{ab})
 = \frac{2(3n - 1)\tau_a^2 \tau_b^2}{T^2} + \frac{2(\Sigma_{aa}\tau_b^2 + \Sigma_{bb}\tau_a^2)}{T} + \frac{\Sigma_{aa}\Sigma_{bb} + \Sigma_{ab}^2}{n}.
-$$
+```
 
 As $`n \to \infty`$ with $`T`$ and $`\tau_a^2, \tau_b^2 > 0`$ fixed, the leading
 term is $`6 n \tau_a^2 \tau_b^2 / T^2`$, so the root-mean-square error of raw
@@ -521,18 +521,18 @@ missing entries.
 To obtain a positive-definite covariance operator across all $`N`$ assets,
 `fit_factor` fits a rank-$`K`$ factor-plus-diagonal model
 
-$$
+```math
 \Sigma_{\mathrm{model}} = B B^\top + \mathrm{diag}(d), \qquad
 B \in \mathbb{R}^{N \times K}, \quad d \in \mathbb{R}_{>0}^N,
-$$
+```
 
 subject to exact preservation of the supplied marginal variances $`v_i > 0`$ and
 a relative floor $`\eta \in (0, 1]`$ (`specific_floor`) on each asset's specific
 variance:
 
-$$
+```math
 (\Sigma_{\mathrm{model}})_{ii} = \|B_{i,:}\|_2^2 + d_i = v_i, \qquad d_i \ge \eta v_i > 0 \quad (i = 0, \dots, N-1).
-$$
+```
 
 Introducing standardized factor rows
 $`z_i = B_{i,:}^\top / \sqrt{v_i} \in \mathbb{R}^K`$ and standardized target
@@ -541,20 +541,20 @@ $`d_i = v_i(1 - \|z_i\|_2^2) \ge \eta v_i`$ is equivalent to the Euclidean ball
 constraint $`\|z_i\|_2 \le R = \sqrt{1 - \eta}`$. The solver minimizes the
 weighted squared correlation error over observed edges:
 
-$$
+```math
 \min_{z_0, \dots, z_{N-1} \in \mathbb{R}^K} \;
 f(Z) = \frac{1}{\sum_{\{i,j\} \in \mathcal{E}} w_{ij}} \sum_{\{i,j\} \in \mathcal{E}} w_{ij} \left(z_i^\top z_j - c_{ij}\right)^2
 \quad \text{subject to} \quad \|z_i\|_2 \le R \;\; (i = 0, \dots, N-1).
-$$
+```
 
 Unobserved pairs $`\{i, j\} \notin \mathcal{E}`$ do not enter the sum (they
 carry weight zero, which is distinct from an observed target $`c_{ij} = 0`$).
 Regardless of where the optimization terminates, the reconstructed covariance
 matrix satisfies
 
-$$
+```math
 \Sigma_{\mathrm{model}} = B B^\top + \mathrm{diag}(d) \succeq \mathrm{diag}(d) \succeq \eta\,\mathrm{diag}(v) \succ 0.
-$$
+```
 
 ### Structural obstructions on sparse graphs
 

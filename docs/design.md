@@ -117,9 +117,9 @@ The interval is still stored in `IntervalIndex` for handle lookup and expiry
 management. When the treap is balanced, a single interval addition or removal on
 a selected graph costs
 
-$$
+```math
 O(\log M + d_a \log m + q_{\mathcal{E}}),
-$$
+```
 
 where $`m`$ is the number of retained points per neighboring asset and
 $`q_{\mathcal{E}}`$ is the number of overlapping intervals across incident edges
@@ -147,9 +147,9 @@ no dynamic revision index is built:
 
 The off-diagonal pair-scanning phase performs
 
-$$
+```math
 O\!\left(\sum_{\{a,b\} \in \mathcal{E},\, m_a, m_b > 0} (m_a + m_b)\right)
-$$
+```
 
 interval visits, followed by $`O(P \log P)`$ sorting of the $`P`$ observed
 output pairs by `(row, col)`. When estimated interval visits exceed
@@ -218,10 +218,10 @@ $`\delta = \mu - \mu^{\mathrm{ref}}`$ be the residual drift shift. Then the
 target-centered return is $`\tilde{r}_e = \check{r}_e - \delta_a \ell_e`$, and
 the bilinear expansion
 
-$$
+```math
 \tilde{r}_e \tilde{r}_f
 = \check{r}_e \check{r}_f - \delta_a (\ell_e \check{r}_f) - \delta_b (\ell_f \check{r}_e) + \delta_a \delta_b (\ell_e \ell_f)
-$$
+```
 
 allows both estimators to be evaluated at any $`(\mu, \tau^2)`$ from 14 additive
 sufficient statistics per active pair $`(a, b)`$ ($`a \le b`$):
@@ -247,10 +247,10 @@ At snapshot time (`_snapshot` in `python/async_covariance/api.py`), let
 $`x_0, \dots, x_5`$ denote indices `0..6` for `method="hy"` or indices `6..12`
 for `method="overlap"`. The pairwise covariance rate is evaluated as
 
-$$
+```math
 \widehat{\Sigma}_{ab}
 = \frac{x_0 - \delta_a x_1 - \delta_b x_2 + \delta_a \delta_b x_3 - \mathbf{1}_{\{a=b\}} \tau_a^2 x_5}{x_4},
-$$
+```
 
 returning `NaN` when the denominator $`x_4 \le 0`$. When all overlapping
 intervals for a pair $`(a, b)`$ have been removed (`count == 0`), its
@@ -264,9 +264,9 @@ and overlap $`o_{ef} = u - s`$, the decay anchor is the overlap midpoint
 $`m_{ef} = s + \frac{1}{2} o_{ef}`$. When added or removed at watermark $`t`$,
 indices `0..12` of its contribution are multiplied by
 
-$$
+```math
 w_{ef}(t) = \exp\!\left(-\frac{\ln 2}{H}(t - m_{ef})\right).
-$$
+```
 
 Each `PairStats` records `last_time`, the watermark at which its sums were last
 updated. When touched at a newer watermark $`t' > \text{last\_time}`$,
@@ -274,10 +274,10 @@ updated. When touched at a newer watermark $`t' > \text{last\_time}`$,
 $`\exp(-\frac{\ln 2}{H}(t' - \text{last\_time}))`$ and updates
 $`\text{last\_time} \leftarrow t'`$. Because
 
-$$
+```math
 \exp\!\left(-\frac{\ln 2}{H}(t - m_{ef})\right) \exp\!\left(-\frac{\ln 2}{H}(t' - t)\right)
 = \exp\!\left(-\frac{\ln 2}{H}(t' - m_{ef})\right) = w_{ef}(t'),
-$$
+```
 
 a subsequent removal of $`(e, f)`$ at watermark $`t'`$ evaluates and subtracts
 the same decayed weight $`w_{ef}(t')`$ present in the accumulator.
@@ -320,11 +320,11 @@ $`K \in \{0, \dots, N-1\}`$, specific-variance floor $`\eta \in (0, 1]`$, and
 observed off-diagonal edges $`\mathcal{E}`$ with positive weights
 $`w_{ij} > 0`$, `fit_factor` transforms the data to correlation scale:
 
-$$
+```math
 c_{ij} = \frac{\widehat{\Sigma}_{ij}}{\sqrt{v_i v_j}}, \qquad
 w_{ij} \leftarrow \frac{w_{ij}}{\max_{\{p,q\} \in \mathcal{E}} w_{pq}} \in (0, 1], \qquad
 R = \sqrt{1 - \eta} \in [0, 1).
-$$
+```
 
 Normalizing $`w_{ij}`$ by its maximum leaves the objective $`f(Z)`$ unchanged
 while preventing overflow in the row normal equations when raw overlap
@@ -349,11 +349,11 @@ incident weights
 $`\tilde{w}_{ij} = w_{ij} / \sum_{j' \in \mathcal{N}(i)} w_{ij'}`$, the row
 subproblem is
 
-$$
+```math
 \min_{\|z\|_2 \le R} \; z^\top G_i z - 2 b_i^\top z, \qquad
 G_i = \sum_{j \in \mathcal{N}(i)} \tilde{w}_{ij} z_j z_j^\top \in \mathbb{R}^{K \times K}, \quad
 b_i = \sum_{j \in \mathcal{N}(i)} \tilde{w}_{ij} c_{ij} z_j \in \mathbb{R}^K.
-$$
+```
 
 If $`b_i = 0`$, the minimum is attained at $`z = 0`$ and `quadratic_ball`
 returns immediately. When $`b_i \neq 0`$ and $`R > 0`$, `quadratic_ball` in
@@ -368,9 +368,9 @@ artificial ridge penalty to $`G_i`$:
    substitution and accepts $`z`$ if and only if $`\|z\|_2 \le R`$ and the
    unconstrained KKT residual satisfies
 
-$$
+```math
 \|G_i z - b_i\|_2 \le 128\,\varepsilon_{\mathrm{mach}} \max(1, K)\,\big(\|G_i\|_F \|z\|_2 + \|b_i\|_2\big).
-$$
+```
 
 2. **Eigenvalue and secular bisection path (`symmetric_eigen`)**:
    When the solution lies on the boundary $`\|z\|_2 = R`$ or $`G_i`$ is singular
@@ -396,7 +396,7 @@ $$
    $`z = Q (\Lambda + \lambda^* I_K)^{-1} g`$ is radially clamped if its norm
    exceeds $`R`$ by a last-bit rounding error and is verified against the KKT
    condition
-   $`\|(G_i + \lambda^* I_K) z - b_i\|_2 \le 128 \varepsilon_{\mathrm{mach}} \max(1, K) (\|G_i\|_F \|z\|_2 + \|b_i\|_2 + \lambda^* \|z\|_2)`$.
+   $`\begin{aligned} \|(G_i + \lambda^* I_K) z - b_i\|_2 &\le 128 \varepsilon_{\mathrm{mach}} \max(1, K) \\ &\quad (\|G_i\|_F \|z\|_2 + \|b_i\|_2 + \lambda^* \|z\|_2) \end{aligned}`$.
 
 An updated row $`z_i^{\mathrm{new}}`$ replaces $`z_i`$ only if its evaluated row
 loss does not exceed the current row loss; otherwise
@@ -436,9 +436,9 @@ An independent reference implementation (`backend="python"` in
   `matvec(x)` computes $`D x + B (B^\top x)`$ in $`O(NK)`$ work per column.
   `solve(x)` applies the Woodbury matrix identity:
 
-$$
+```math
 (B B^\top + D)^{-1} x = D^{-1} x - D^{-1} B \left(I_K + B^\top D^{-1} B\right)^{-1} B^\top D^{-1} x.
-$$
+```
 
 When $`K \ge 1`$, the first call to `solve` computes $`D^{-1} B \in \mathbb{R}^{N \times K}`$,
 forms the $`K \times K`$ capacitance matrix $`I_K + B^\top D^{-1} B`$, and

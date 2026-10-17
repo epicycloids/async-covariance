@@ -57,10 +57,16 @@ def _edge_pairs(edges):
 
 @dataclass(frozen=True)
 class MomentSnapshot:
-    """Raw pair estimates. Missing pairs have no positive denominator.
+    """Pairwise covariance-rate estimates and overlap support diagnostics.
 
-    Units are covariance per input time unit. A raw estimate may be indefinite;
-    ``factor`` fits a positive-definite model with the chosen diagonal.
+    Units are log-return covariance per input time unit. ``rows`` and ``cols``
+    index observed asset pairs ``0 <= rows[k] <= cols[k] < n_assets`` with at
+    least one overlapping increment pair. ``covariance`` holds the pairwise
+    rate estimate (``NaN`` if ``denominator <= 0``), ``counts`` holds unweighted
+    overlapping interval-pair counts, ``coverage`` holds unweighted total
+    overlap duration, ``weighted_coverage`` holds decay-weighted overlap
+    duration, and ``variance`` holds the length-``n_assets`` diagonal variance
+    rates (``NaN`` for assets without positive diagonal denominator).
     """
 
     n_assets: int
@@ -76,18 +82,21 @@ class MomentSnapshot:
     watermark: float | None
 
     def dense(self):
-        """Materialize symmetric pair estimates, with NaN for missing pairs."""
+        """Materialize the symmetric ``(n_assets, n_assets)`` rate matrix, with ``NaN`` on unobserved pairs."""
         out = np.full((self.n_assets, self.n_assets), np.nan)
         out[self.rows, self.cols] = self.covariance
         out[self.cols, self.rows] = self.covariance
         return out
 
     def factor(self, rank, *, weights=None, variance=None, **kwargs):
-        """Fit a factor model. Default weights are decayed overlap coverage.
+        """Fit a positive-definite factor model to the observed off-diagonal pairs.
 
-        Coverage is a fitting heuristic, not a claimed inverse sampling variance.
-        Pass weights explicitly when a model for pair uncertainty is available.
-        An explicit variance vector can supply externally estimated diagonals.
+        By default, ``weights`` uses ``self.weighted_coverage`` (decay-weighted
+        overlap duration) and ``variance`` uses ``self.variance``. Pass
+        ``weights`` (one entry per snapshot pair) or ``variance`` (length
+        ``n_assets``, all positive and finite) to supply custom edge weights or
+        marginal variances. Additional keyword arguments are forwarded to
+        :func:`fit_factor`.
         """
         from .projection import fit_factor
 
@@ -102,16 +111,31 @@ class MomentSnapshot:
 
 
 class OnlineCovariance:
-    """Native pair moments with exact local observation revisions.
+    """Streaming pairwise covariance-rate accumulator supporting historical revisions.
 
-    ``half_life`` weights each overlap at its midpoint. ``window`` retains only
-    whole increments starting at or after ``watermark-window`` and rejects older
-    revisions. Without a window, history is retained and revisions are unlimited.
-    ``edges`` restricts off-diagonal work to a selected pair graph; diagonals are
-    always included. Asset indices can grow beyond the initial ``n_assets``.
-    ``reference_drift`` fixes a numerical centering baseline; newly grown assets
-    use zero. Supply the actual drift again to ``snapshot``. A nearby baseline
-    protects small residual covariance from cancellation by a large trend.
+    Parameters
+    ----------
+    n_assets : int
+        Initial number of assets. Asset indices in subsequent updates may grow
+        beyond ``n_assets``.
+    half_life : float, optional
+        Exponential decay half-life in input time units, anchored at the
+        midpoint of each interval overlap.
+    window : float, optional
+        Sliding retention window width in input time units. Whole increments
+        starting at ``start >= watermark - window`` are retained; older
+        increments are expired and edits prior to the cutoff are rejected.
+        If ``None``, full history is retained.
+    edges : array-like of shape (m, 2), optional
+        2D integer array-like of nonnegative ``(asset_a, asset_b)`` index pairs
+        (or an empty sequence) restricting off-diagonal tracking to the
+        selected graph. All diagonal entries are always tracked. If ``None``,
+        all overlapping pairs are tracked.
+    reference_drift : float or array-like, default 0.0
+        Fixed drift baseline subtracted from each increment as it is formed to
+        prevent catastrophic cancellation under a large trend. Pass the target
+        ``drift`` to :meth:`snapshot` to evaluate at any drift vector; newly
+        grown assets use a baseline of zero.
     """
 
     def __init__(self, n_assets: int, *, half_life=None, window=None, edges=None,
@@ -165,11 +189,12 @@ class OnlineCovariance:
         return self
 
     def snapshot(self, *, method: Method = "hy", drift=0.0, noise_variance=0.0):
-        """Evaluate a rate estimate using supplied drift and point-noise variance.
+        """Evaluate a :class:`MomentSnapshot` at the supplied drift and point-noise variance.
 
-        Noise correction assumes independent noise across assets and observation
-        endpoints, with a constant variance per asset. It corrects diagonal bias;
-        it does not make raw high-frequency products noise robust.
+        ``method`` selects ``'hy'`` (Hayashi-Yoshida overlap exposure ratio) or
+        ``'overlap'`` (duration-normalized overlap regression). ``noise_variance``
+        subtracts ``2 * noise_variance[a]`` per increment on the diagonal under
+        independent additive point errors.
         """
         rows, cols, stats = self._core.statistics()
         if len(self._reference) < self.n_assets:
@@ -205,11 +230,13 @@ def _snapshot(n, watermark, rows, cols, stats, method, drift, noise_variance):
 
 def fit(times, assets, log_prices, *, n_assets=None, method: Method = "hy",
         drift=0.0, noise_variance=0.0, half_life=None, window=None, edges=None, threads=None):
-    """Native batch interval scan, with the same statistics as streaming.
+    """Estimate pairwise covariance rates from batch arrays via two-pointer interval scans.
 
-    Stable sorting means the last supplied value at a duplicate key wins.
-    Independent pairs use a cached CPU thread pool for sufficiently large work;
-    ``threads=1`` forces serial execution. Online updates use a single writer.
+    Unordered timestamps are stably sorted so the last value at a duplicate
+    ``(asset, time)`` key takes precedence. Increments are centered at ``drift``
+    before accumulating sufficient statistics. Large pair scans execute in
+    parallel across a cached CPU thread pool; pass ``threads=1`` for serial
+    execution.
     """
     t, a, p = _observations(times, assets, log_prices)
     inferred = int(a.max()) + 1 if len(a) else 0
@@ -234,11 +261,11 @@ def fit(times, assets, log_prices, *, n_assets=None, method: Method = "hy",
 
 
 def coarsen(times, assets, log_prices, *, width, origin=0.0):
-    """Keep the last actual observation in each fixed time bucket per asset.
+    """Retain the last observation per asset in each fixed bucket ``[origin + k*width, origin + (k+1)*width)``.
 
-    Timestamps are preserved. Points per bucket are bounded, but adjacent selected
-    timestamps can be arbitrarily close across a bucket boundary. This is batch
-    thinning, not pre-averaging or an automatically chosen bandwidth.
+    Preserves the selected observations' original timestamps and duplicate-key
+    replacement semantics. Bounds retained points per bucket, though points on
+    opposite sides of a bucket boundary may remain closer than ``width``.
     """
     t, a, p = _observations(times, assets, log_prices)
     if not np.isfinite(width) or width <= 0 or not np.isfinite(origin):
@@ -258,11 +285,12 @@ def coarsen(times, assets, log_prices, *, width, origin=0.0):
 
 
 def estimate_noise(times, assets, log_prices, *, n_assets=None, drift=0.0):
-    """Adjacent-return noise moment: -mean(r_i*r_(i+1)), by asset.
+    """Estimate per-asset point-noise variance via ``-mean(r_k * r_{k+1})`` on drift-centered returns.
 
-    Assumes independent Brownian increments and iid endpoint noise after drift
-    removal. Returns the signed estimate without clipping; a negative estimate
-    is a diagnostic, not a valid supplied noise variance.
+    Under exogenous sampling, independent Brownian increments, drift ``drift``,
+    and mutually independent point errors, adjacent increments share only their
+    common endpoint error with opposite signs. Returns the unclipped signed
+    sample moment (or ``NaN`` for assets with fewer than two increments).
     """
     t, a, p = _observations(times, assets, log_prices)
     n = int(a.max()) + 1 if n_assets is None and len(a) else (n_assets or 0)

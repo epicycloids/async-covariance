@@ -1,8 +1,10 @@
 //! Dynamic interval reporting index with pooled treap nodes.
 //!
-//! Keys are `(start, handle)`. Each subtree stores its maximum interval end so
-//! queries skip expired or disjoint subtrees. Handles are internal and reused
-//! only after removal; callers must not retain removed handles.
+//! Keys are `(start, handle)`, balanced using deterministic SplitMix64 hashes
+//! of the monotonic insertion counter (`mix64(sequence)`). Each subtree stores
+//! its maximum interval end so queries skip disjoint subtrees. Handles are
+//! internal and reused only after removal; callers must not retain removed
+//! handles.
 
 use std::cmp::Ordering;
 

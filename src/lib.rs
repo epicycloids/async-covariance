@@ -1,3 +1,11 @@
+//! PyO3 bindings for the batch/streaming moment engines and native factor solver.
+//!
+//! Input slices are copied before releasing the GIL so concurrent Python
+//! mutations cannot race with native execution. Pairwise sufficient statistics
+//! are returned as `(rows, cols, values)` where `values` has 14 columns:
+//! `0..6` (`"hy"` coefficients), `6..12` (`"overlap"` coefficients), `12`
+//! (unweighted overlap count), and `13` (unweighted overlap duration).
+
 mod batch;
 mod engine;
 mod factor;

@@ -1,3 +1,5 @@
+"""Covariance-rate estimation and positive-definite factor projection for asynchronous log prices."""
+
 from .api import MomentSnapshot, OnlineCovariance, coarsen, estimate_noise, fit
 from .model import FactorCovariance
 from .projection import FactorFit, fit_factor, spectral_factor

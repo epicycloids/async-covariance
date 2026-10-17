@@ -24,12 +24,14 @@ from .model import FactorCovariance, _immutable_array
 
 @dataclass(frozen=True, eq=False)
 class FactorFit:
-    """A covariance candidate and observed-edge loss after each complete sweep.
+    """Result of fitting a factor-plus-diagonal covariance model to an observed edge graph.
 
-    ``converged`` reports objective-tolerance termination of the alternating
-    solver. It does not establish a unique missing-edge completion, a global
-    optimum, or parameter identification. Graph diagnostics describe concrete
-    obstructions separately.
+    ``model`` holds the fitted :class:`FactorCovariance`, ``objective_history``
+    records the weighted mean-square correlation loss after initialization and
+    each accepted sweep, ``converged`` indicates whether optimization stopped
+    via ``'objective_tolerance'`` or ``'no_factor_work'``, and ``diagnostics``
+    reports solver metadata and structural graph properties (component counts,
+    bipartite components, and degree-deficient rows).
     """
 
     model: FactorCovariance
@@ -334,29 +336,31 @@ def fit_factor(
     eigensolver: str = "eigsh",
     backend: str = "native",
 ) -> FactorFit:
-    """Fit factors to observed off-diagonal covariance rates.
+    """Fit a positive-definite factor model to observed off-diagonal covariance rates.
 
-    The minimized loss is ``sum(w * (z_i @ z_j - c_ij)**2) / sum(w)`` where
-    ``c_ij = covariance_ij / sqrt(variance_i * variance_j)``. Every row obeys
-    ``||z_i||² <= 1 - specific_floor``; marginal variances stay equal to the
-    supplied vector. Weights are fixed support/reliability weights, not inverse
-    variance estimates computed by this routine.
+    Minimizes ``sum(w_ij * (z_i @ z_j - c_ij)**2) / sum(w_ij)`` over observed
+    off-diagonal edges ``(i, j)`` where ``c_ij = covariance_ij / sqrt(variance_i * variance_j)``,
+    subject to ``||z_i||**2 <= 1 - specific_floor`` for each row ``i``. The
+    resulting covariance ``B @ B.T + diag(d)`` preserves ``variance`` on the
+    diagonal and satisfies ``d >= specific_floor * variance > 0``.
 
-    Supply each unordered off-diagonal pair once. Zero-weight entries are
-    ignored, including NaN covariance values; positive-weight observed zeros
-    remain in the loss. Rank may be zero and must be less than the asset count.
-    ``initial`` accepts a prior model or loadings in covariance units. It is
-    rescaled to current marginal variances and projected into the row balls.
+    Supply each unordered off-diagonal pair at most once. Zero-weight entries
+    are omitted from the objective (including ``NaN`` covariances), whereas
+    positive-weight zero covariances are fitted as observed zeros. ``rank``
+    must lie in ``[0, n_assets)``. ``initial`` accepts a prior
+    :class:`FactorCovariance` or ``(n_assets, rank)`` loadings in covariance
+    units, rescaled to ``variance`` and projected into the row balls.
 
-    Initialization choices are explicitly ``'random'`` (the seeded default)
-    and ``'spectral'``.
-    ``'eigsh'`` keeps graph initialization sparse; ``'eigh'`` materializes a
-    dense matrix and uses a partial symmetric eigensolve. Numerically zero
-    spectral rows with nonzero observed targets receive seeded random values
-    so omitted components can leave the zero-factor saddle. ``backend='native'``
-    runs the row updates in compiled code; ``'python'`` selects the independent
-    NumPy/SciPy reference. Alternating fitting supplies a local candidate with
-    no global optimum guarantee; objective tolerance does not prove stationarity.
+    ``initialization`` selects ``'random'`` (the seeded default) or
+    ``'spectral'`` (using sparse ``eigensolver='eigsh'`` or dense ``'eigh'``,
+    with seeded random fallback for active rows whose leading spectral loading
+    is numerically zero). ``backend='native'`` runs the Gauss-Seidel row
+    updates in compiled Rust; ``backend='python'`` runs the NumPy/SciPy
+    reference implementation. Because the joint objective is nonconvex,
+    alternating updates produce a local candidate with nonincreasing objective
+    history; stopping on ``tol`` indicates small sweep-to-sweep objective
+    change rather than a certificate of stationarity, global optimality, or
+    unique missing-edge completion.
     """
     variance, rank = _variance_rank(variance, rank)
     floor = _floor(specific_floor)

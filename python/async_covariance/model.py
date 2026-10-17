@@ -93,13 +93,13 @@ class FactorCovariance:
         return result
 
     def solve(self, value: np.ndarray) -> np.ndarray:
-        """Solve against covariance using Woodbury and a small Cholesky factor.
+        """Solve ``(loadings @ loadings.T + diag(specific)) @ x = value`` via Woodbury.
 
-        The first call caches the scaled loadings and a ``rank x rank`` Cholesky
-        factor. Subsequent calls use the same immutable covariance. No inverse is
-        formed. As with other floating-point solvers, extremely ill-conditioned
-        models can lose accuracy; the projection routines impose a specific
-        variance floor.
+        On the first call with ``rank >= 1``, caches ``D^-1 @ loadings`` and the
+        ``rank x rank`` Cholesky factor of ``I + loadings.T @ D^-1 @ loadings``
+        in ``O(n_assets * rank**2 + rank**3)`` work. Each right-hand side column
+        then solves in ``O(n_assets * rank + rank**2)`` work without forming a
+        dense ``n_assets x n_assets`` matrix.
         """
         value = self._rhs(value)
         diagonal = self.specific if value.ndim == 1 else self.specific[:, None]

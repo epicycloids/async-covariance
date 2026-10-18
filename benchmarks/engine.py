@@ -1,6 +1,6 @@
 """End-to-end native ingestion, historical revision, and snapshot timings.
 
-Run: OPENBLAS_NUM_THREADS=1 python benchmarks/engine.py --output benchmarks/local/engine.json
+Run: OPENBLAS_NUM_THREADS=1 uv run python benchmarks/engine.py --output benchmarks/local/engine.json
 """
 from __future__ import annotations
 

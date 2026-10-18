@@ -3,7 +3,7 @@
 
 Run from an installed checkout::
 
-    python benchmarks/quality.py --reps 100 --output quality.json
+    uv run python benchmarks/quality.py --reps 100 --output quality.json
 
 Times are in days. Covariances are rates per day; noise_variance contains
 point-error variances. Paired methods and coarsening use the same simulated data.

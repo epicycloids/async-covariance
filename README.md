@@ -31,7 +31,7 @@ Prebuilt wheels for Linux x86-64 (`glibc 2.35+`) are available on
 To build from source with Rust 1.83+:
 
 ```sh
-python -m pip install .
+uv sync
 ```
 
 ## Quick Start
@@ -131,12 +131,12 @@ snapshot = online.snapshot(
 ## Verification and Benchmarks
 
 ```sh
-python -m pip install '.[test]'
+uv sync --extra test
 cargo test --locked --lib
-OPENBLAS_NUM_THREADS=1 python -m pytest -q
-OPENBLAS_NUM_THREADS=1 python benchmarks/engine.py
-OPENBLAS_NUM_THREADS=1 python benchmarks/projection.py
-python benchmarks/quality.py --reps 100
+OPENBLAS_NUM_THREADS=1 uv run python -m pytest -q
+OPENBLAS_NUM_THREADS=1 uv run python benchmarks/engine.py
+OPENBLAS_NUM_THREADS=1 uv run python benchmarks/projection.py
+uv run python benchmarks/quality.py --reps 100
 ```
 
 ## Documentation

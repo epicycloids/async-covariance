@@ -161,10 +161,11 @@ RMSE around $`1.0\text{--}1.3`$, trading sample size against noise amplification
 From an installed checkout at the repository root:
 
 ```sh
-OPENBLAS_NUM_THREADS=1 python benchmarks/engine.py --output benchmarks/local/engine.json
-OPENBLAS_NUM_THREADS=1 python benchmarks/projection.py --assets 512 --rank 4 --output benchmarks/local/projection512.json
-OPENBLAS_NUM_THREADS=1 python benchmarks/projection.py --assets 1024 --rank 8 --output benchmarks/local/projection1024.json
-python benchmarks/quality.py --reps 100 --output benchmarks/local/quality.json
+uv sync
+OPENBLAS_NUM_THREADS=1 uv run python benchmarks/engine.py --output benchmarks/local/engine.json
+OPENBLAS_NUM_THREADS=1 uv run python benchmarks/projection.py --assets 512 --rank 4 --output benchmarks/local/projection512.json
+OPENBLAS_NUM_THREADS=1 uv run python benchmarks/projection.py --assets 1024 --rank 8 --output benchmarks/local/projection1024.json
+uv run python benchmarks/quality.py --reps 100 --output benchmarks/local/quality.json
 ```
 
 Reference outputs are checked into [`benchmarks/results/`](../benchmarks/results).

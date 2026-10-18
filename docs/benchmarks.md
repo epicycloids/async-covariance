@@ -6,8 +6,7 @@ portable x86-64 code generation without architecture-specific SIMD flags or
 `fast-math`), Python 3.12.12, NumPy 2.5.4, and SciPy 1.18.1. BLAS was pinned to
 a single thread (`OPENBLAS_NUM_THREADS=1`), while parallel native batch scans
 used up to eight CPU threads. Peak resident memory is read from Linux `VmHWM` in
-`/proc/self/status` so that parent-process memory is not inherited through
-`ru_maxrss`.
+`/proc/self/status`, which tracks the process's peak resident set size.
 
 ---
 
@@ -19,7 +18,7 @@ Selected-graph cases use a ring-lattice graph of degree 8 ($`4N`$ off-diagonal
 pairs), whereas full-graph cases track all $`\binom{N}{2}`$ off-diagonal pairs.
 
 Reported times are the median of three end-to-end runs, including Python
-validation and defensive NumPy buffer copies before releasing the GIL.
+validation and NumPy input buffer copies before releasing the GIL.
 Historical revision timings measure replacing 512 existing prices inside the
 retained history in two ways:
 
@@ -84,11 +83,11 @@ and alternating row updates, excluding pairwise moment estimation.
   fixture, floating-point differences between cyclic Jacobi and LAPACK eigensolvers
   can steer boundary-constrained rows along slightly different local paths while
   maintaining monotonically nonincreasing loss at every sweep.
-- **Dense spectral projection (`spectral_factor`)**: Recorded in the same JSON
-  files as a separate dense baseline; at $`N = 512, K = 4`$ it runs in 17.5 ms
+- **Dense spectral projection (`spectral_factor`)**: The benchmark JSON files
+  also record `spectral_factor`, which truncates the eigendecomposition of a
+  fully populated correlation matrix; at $`N = 512, K = 4`$ it runs in 17.5 ms
   (`eigsh`) and 28.0 ms (`eigh`), and at $`N = 1{,}024, K = 8`$ in 104.3 ms
-  (`eigsh`) and 196.3 ms (`eigh`). Dense spectral projection operates on a fully
-  populated correlation matrix rather than weighting observed graph edges.
+  (`eigsh`) and 196.3 ms (`eigh`).
 
 ---
 
@@ -106,11 +105,9 @@ covariance rate
 \end{bmatrix}.
 ```
 
-Reported values are the root-mean-square error (RMSE) across replications
-$`\pm`$ one delta-method Monte Carlo standard error (which measures finite
-simulation uncertainty across the 100 replications, not an estimator confidence
-interval). Both `"hy"` and `"overlap"` are evaluated on the exact same sample
-paths.
+Reported values are the root-mean-square error (RMSE) across the 100
+replications $`\pm`$ one delta-method Monte Carlo standard error of the RMSE
+estimate. Both `"hy"` and `"overlap"` are evaluated on the same sample paths.
 
 ### Asynchronous schedules without microstructure noise
 
@@ -123,11 +120,10 @@ on $`[0, 1]`$ with fixed endpoints $`0`$ and $`1`$:
 | 2,048 / 128 / 16 (`drift = [0, 0, 0]`) | $`0.918 \pm 0.043`$ | $`0.626 \pm 0.024`$ |
 | 512 / 512 / 512 (`drift = [2, -1, 0.5]`) | $`0.304 \pm 0.011`$ | $`0.232 \pm 0.007`$ |
 
-In these noiseless constant-rate experiments, duration-normalized overlap
-weighting (`"overlap"`) achieves lower Frobenius RMSE than `"hy"`, particularly
-when observation frequencies differ strongly across assets (2,048 / 128 / 16).
-Relative efficiency under other correlation structures, endogenous arrival
-times, microstructure noise, or time-varying volatility depends on the regime.
+In these noiseless constant-rate experiments with exogenous uniform arrivals,
+duration-normalized overlap weighting (`"overlap"`) achieves lower Frobenius
+RMSE than `"hy"`, particularly when observation frequencies differ strongly
+across assets (2,048 / 128 / 16).
 
 ### Additive point noise under infill sampling
 

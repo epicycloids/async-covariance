@@ -192,11 +192,10 @@ When $`w_{ef} \equiv 1`$ and $`\mu = 0, \tau = 0`$, the numerator
 $`\sum_{(e,f) \in \mathcal{P}_{ab}} r_e r_f`$ is the integrated covariance
 estimator of Hayashi and Yoshida (2005), and the denominator
 $`\sum_{(e,f) \in \mathcal{P}_{ab}} o_{ef}`$ is the total joint observation
-coverage. Dividing by the active overlap exposure $`\sum w_{ef} o_{ef}`$ rather
-than a nominal clock horizon $`T`$ ensures that
-$`\widehat{\Sigma}^{\mathrm{hy}}_{ab}`$ remains conditionally unbiased for the
-rate $`\Sigma_{ab}`$ under arbitrary arrival gaps, partial coverage, and
-exponential decay $`w_{ef}`$.
+coverage. Normalizing by the active overlap exposure $`\sum w_{ef} o_{ef}`$ over
+an observation horizon $`T`$ keeps $`\widehat{\Sigma}^{\mathrm{hy}}_{ab}`$
+conditionally unbiased for the covariance rate $`\Sigma_{ab}`$ under arrival
+gaps, partial observation coverage, and exponential decay weights $`w_{ef}`$.
 
 On the diagonal ($`a = b`$), $`\mathcal{P}_{aa} = \{(e, e)\}`$ and
 $`o_{ee} = \ell_e`$, so
@@ -320,9 +319,11 @@ Isserlis' (Wick's) theorem for centered jointly Gaussian vectors,
 Dividing $`\mathrm{Var}(S \mid \mathcal{T})`$ by the squared estimator
 denominator yields the exact conditional variance of $`\widehat{\Sigma}_{ab}`$.
 
-This identity shows why neither the overlap pair count
-$`\lvert \mathcal{P}_{ab} \rvert`$ (`counts`) nor the total overlap duration
-$`\sum o_{ef}`$ (`coverage`) equals an effective sample size:
+Because this trace expression depends on the interval durations and can couple
+distinct overlapping pairs through shared increments or adjacent-endpoint noise,
+the conditional variance is not determined by the overlap pair count
+$`\lvert \mathcal{P}_{ab} \rvert`$ (`counts`) or the total overlap duration
+$`\sum o_{ef}`$ (`coverage`) alone:
 
 - **Shared intervals**: If a single long increment $`I_e`$ of a slowly traded
   asset $`a`$ overlaps $`k`$ short increments $`I_{f_1}, \dots, I_{f_k}`$ of a
@@ -371,9 +372,9 @@ K^{\mathrm{hy}}_{ab}(s) \propto \sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef}(t)\,\ma
 K^{\mathrm{overlap}}_{ab}(s) \propto \sum_{(e,f) \in \mathcal{P}_{ab}} w_{ef}(t)\,\frac{o_{ef}}{\ell_e \ell_f}\,\mathbf{1}_{I_e \cap I_f}(s).
 ```
 
-Neither estimator recovers an instantaneous spot covariance $`\Sigma(t)`$
-without a local stationarity assumption over the effective support of the
-kernel.
+Recovering an instantaneous spot covariance $`\Sigma(t)`$ from either estimator
+requires local stationarity of the covariance rate over the effective support
+of its kernel.
 
 ### Whole-increment window expiration
 
@@ -382,16 +383,16 @@ engine retains all increments $`I_e = [s_e, u_e)`$ whose start time satisfies
 $`s_e \ge t - W`$ and expires any increment with $`s_e < t - W`$ in its
 entirety.
 
-Expiring whole increments—rather than retaining an increment that straddles the
-cutoff $`c = t - W`$ and clipping its overlap duration to
-$`\tilde{o}_{ef} = \lvert I_e \cap I_f \cap [c, t) \rvert`$—is necessary to
-preserve conditional unbiasedness. If $`I_e`$ and $`I_f`$ overlap both before
-and after $`c`$, the observed return product $`Z_{ef}`$ still accumulates latent
-Brownian covariation over the full intersection $`I_e \cap I_f`$ of length
-$`o_{ef}`$. Dividing $`Z_{ef}`$ by a truncated denominator
-$`\tilde{o}_{ef} < o_{ef}`$ would yield conditional expectation
-$`(o_{ef} / \tilde{o}_{ef})\Sigma_{ab}`$, scaling the true covariance rate by
-the factor $`o_{ef} / \tilde{o}_{ef} > 1`$ whenever $`\Sigma_{ab} \neq 0`$.
+Whole-increment expiration preserves conditional unbiasedness across the window
+cutoff $`c = t - W`$. In a scheme that clipped an overlapping pair's duration
+to the in-window portion $`\tilde{o}_{ef} = \lvert I_e \cap I_f \cap [c, t) \rvert`$,
+if $`I_e`$ and $`I_f`$ overlap both before and after $`c`$, the observed return
+product $`Z_{ef}`$ still accumulates latent Brownian covariation over the full
+intersection $`I_e \cap I_f`$ of length $`o_{ef}`$. Dividing $`Z_{ef}`$ by a
+truncated denominator $`\tilde{o}_{ef} < o_{ef}`$ would yield conditional
+expectation $`(o_{ef} / \tilde{o}_{ef})\Sigma_{ab}`$, scaling the true
+covariance rate by the factor $`o_{ef} / \tilde{o}_{ef} > 1`$ whenever
+$`\Sigma_{ab} \neq 0`$.
 
 ---
 
@@ -443,9 +444,10 @@ detectable relative to sampling error.
 
 Subtracting $`2\tau_a^2`$ removes the diagonal bias, and independent point noise
 across assets ($`a \neq b`$) introduces zero bias into off-diagonal products
-($`\Gamma_{ef} = 0`$). Even so, raw return products are **not** consistent under
-noisy infill asymptotics ($`n \to \infty`$ on a fixed horizon $`T`$ with fixed
-$`\tau_a^2, \tau_b^2 > 0`$).
+($`\Gamma_{ef} = 0`$). Under noisy infill asymptotics ($`n \to \infty`$ on a
+fixed horizon $`T`$ with fixed $`\tau_a^2, \tau_b^2 > 0`$), however,
+covariance-rate estimators built from raw return products are inconsistent
+because their estimation variance diverges with sampling frequency.
 
 To see this explicitly, consider two assets $`a \neq b`$ observed synchronously
 on the uniform grid $`t_k = k T / n`$ ($`k = 0, \dots, n`$) with spacing
@@ -471,8 +473,9 @@ Substituting $`\Delta = T / n`$ and collecting powers of $`n`$ yields
 ```
 
 As $`n \to \infty`$ with $`T`$ and $`\tau_a^2, \tau_b^2 > 0`$ fixed, the leading
-term is $`6 n \tau_a^2 \tau_b^2 / T^2`$, so the root-mean-square error of raw
-noisy products grows as $`\sqrt{6 n}\,\tau_a \tau_b / T`$.
+term is $`6 n \tau_a^2 \tau_b^2 / T^2`$, so on this uniform grid the
+root-mean-square error of the raw-product covariance-rate estimator grows as
+$`\sqrt{6 n}\,\tau_a \tau_b / T`$.
 
 ### Fixed-bin thinning (`coarsen`) versus pre-averaging
 
@@ -494,9 +497,9 @@ from pre-averaging:
 - Because original timestamps are preserved, an observation near the end of
   bucket $`m - 1`$ and an observation near the start of bucket $`m`$ can still
   be separated by less than $`\Delta`$.
-- Thinning discards intermediate observations rather than averaging them.
-  **Pre-averaging** (Jacod et al., 2009; Christensen, Kinnebrock, and Podolskij,
-  2010; Christensen, Podolskij, and Vetter, 2013) forms local linear
+- Thinning retains one observation per bucket and discards the intermediate
+  points. **Pre-averaging** (Jacod et al., 2009; Christensen, Kinnebrock, and
+  Podolskij, 2010; Christensen, Podolskij, and Vetter, 2013) forms local linear
   combinations of returns $`R_e = \sum_j a_j r_j`$ over blocks of length
   $`k_n \propto n^{1/2}`$, which alters both the latent covariance exposure to
   $`\int g_e(s) g_f(s)\,ds`$ (where $`g_e(s) = \sum_j a_j \mathbf{1}_{I_j}(s)`$)
@@ -598,13 +601,14 @@ obstructions when $`K \ge 1`$:
   solutions are not unique. (Isolated assets with
   $`\lvert \mathcal{N}(i) \rvert = 0`$ are fixed at $`z_i = 0`$.)
 
-These three checks are structural graph warnings rather than universal
-necessary or sufficient conditions for identification (for example, the
-degenerate boundary case $`\eta = 1`$ forces $`R = 0`$ and uniquely yields
-$`\Sigma_{\mathrm{model}} = \mathrm{diag}(v)`$ on any graph, while for
+These three checks report local graph symmetries and degree deficiencies in
+`FactorFit.diagnostics` without characterizing global identifiability. At the
+boundary $`\eta = 1`$, the radius $`R = 0`$ uniquely determines
+$`\Sigma_{\mathrm{model}} = \mathrm{diag}(v)`$ on any graph, whereas for
 $`K \ge 1`$, `completion_identifiability` is always reported as
-`"not_established"`). Moreover, because $`f(Z)`$ is nonconvex, alternating
-minimization finds a local candidate rather than a certified global minimum.
+`"not_established"`. Because $`f(Z)`$ is nonconvex, alternating minimization
+returns an optimization candidate accepted under the configured stopping rule
+(`tol`, `max_iter`, or numerical stall) without a global optimality guarantee.
 
 ---
 
@@ -617,12 +621,12 @@ with alternative high-frequency covariance frameworks in the literature.
 
 | Estimator / Framework | Statistical Target and Regime | Online State and Update Work | Structural Assumptions and Requirements |
 | :--- | :--- | :--- | :--- |
-| **Hayashi–Yoshida rate** (`method="hy"`) | Constant covariance rate $`\Sigma`$ from asynchronous returns with low microstructure noise | Interval index and 14 sufficient statistics per active pair; exact local insert/replace/delete | Exogenous sampling; variance of raw products grows as $`O(n)`$ under noisy infill sampling |
+| **Hayashi–Yoshida rate** (`method="hy"`) | Constant covariance rate $`\Sigma`$ from asynchronous returns with low microstructure noise | Interval index and 14 sufficient statistics per active pair; exact local insert/replace/delete | Exogenous sampling; under noisy uniform infill sampling, covariance-rate estimator variance from raw products grows as $`O(n)`$ |
 | **Overlap regression** (`method="overlap"`) | Constant covariance rate $`\Sigma`$, particularly under heterogeneous or imbalanced interval durations | Same interval index and 14 sufficient statistics as `"hy"` | Exogenous sampling; inverse-duration weights are variance-optimal at $`\Sigma_{ab}=0`$ without noise |
 | **Pre-averaged HY / Realized kernels** | Integrated covariance $`\int_0^T \Sigma(s)\,ds`$ under dense, noisy, asynchronous point observations | Rolling observation buffer and multi-lag return sums | Requires bandwidth / kernel selection ($`k_n \propto n^{1/2}`$ for pre-averaging; $`H \propto n^{3/5}`$ for positive-semidefinite non-flat-top realized kernels), boundary handling, and refresh-time or pair-interpolation rules |
 | **Spectral local method of moments (LMM)** | Integrated or smoothed spot covariance under dense noisy observations; asymptotically efficient | Block-wise local sine-basis coefficients and noise estimators | Common block size is constrained by the least liquid asset; optimal multivariate weights act on $`N^2 \times N^2`$ Kronecker forms |
 | **Positive-semidefinite Fourier spot estimator** | Spot covariance $`\Sigma(t)`$ on asynchronous grids with fine mesh | Fixed-frequency trigonometric return coefficients per asset | Requires choosing frequency cutoffs, localization kernel, and horizon scaling; causal real-time evaluation faces boundary bias |
-| **Gaussian QML / Kalman–EM** | Integrated covariance $`\int_0^T \Sigma(s)\,ds`$ (via a constant-parameter working Gaussian quasi-likelihood) and noise variance $`\tau^2`$ | Pairwise or joint Kalman filter and smoother state | Parameter updates and historical price revisions require full or windowed smoothing passes rather than $`O(1)`$ sufficient-statistic subtraction |
+| **Gaussian QML / Kalman–EM** | Integrated covariance $`\int_0^T \Sigma(s)\,ds`$ (via a constant-parameter working Gaussian quasi-likelihood) and noise variance $`\tau^2`$ | Pairwise or joint Kalman filter and smoother state | Parameter updates and historical price revisions require smoothing passes over the observation history because state estimates do not reduce to $`O(1)`$ additive sufficient statistics per overlap |
 | **Local factor PCA / POET** | High-dimensional spot or integrated factor covariance on dense panels | Block-wise pre-averaging, eigendecomposition, and residual thresholding | Requires uniform observation density across the panel, pervasive factors, and sparse idiosyncratic covariance |
 
 ### Annotated primary references
@@ -681,19 +685,17 @@ with alternative high-frequency covariance frameworks in the literature.
    [Author PDF](https://dachxiu.chicagobooth.edu/download/KFQMLE.pdf))
    Analyzes Gaussian quasi-maximum likelihood estimation from noisy asynchronous
    observations via Kalman filtering and EM, proving consistency for integrated
-   covariance under stochastic volatility despite misspecification of the
-   constant-parameter working likelihood. Their fast factor specification treats
-   observed noisy factors; exact state-space filtering with latent factors and
-   historical data revisions requires Kalman smoothing passes over the
-   observation history.
+   covariance under stochastic volatility under a constant-parameter working
+   likelihood. Their factor specification uses observed noisy factors, while
+   latent-state parameter updates and historical revisions require Kalman
+   smoothing passes over the observation history.
 
 6. **Cappé, O. (2011)**, *Online EM Algorithm for Hidden Markov Models*, Journal
    of Computational and Graphical Statistics 20(3), 728–749.
    ([arXiv](https://arxiv.org/abs/0908.2359))
-   Demonstrates that recursive online EM for latent-state models requires
+   Develops recursive online expectation-maximization for latent-state models by
    propagating auxiliary filtering-smoothing sufficient statistics forward in
-   time; storing only filtered state means is insufficient to reproduce batch EM
-   updates.
+   time alongside the filtered state distribution.
 
 7. **Bibinger, M., N. Hautsch, P. Malec, and M. Reiß (2014, 2019)**, *Estimating
    the quadratic covariation matrix from noisy observations: Local method of
@@ -731,8 +733,6 @@ with alternative high-frequency covariance frameworks in the literature.
     High-Dimensional Time Series with Heteroskedastic Noise*, arXiv:2610.00766.
     ([arXiv](https://arxiv.org/abs/2610.00766))
     Applies HeteroPCA to contemporaneous and lagged sample covariances on
-    discrete panels under serially correlated factors (excluding white-noise
-    factor increments). By contrast, `fit_factor` operates directly on
-    continuous-time pairwise covariance rates over arbitrary sparse overlap
-    graphs with explicit row-ball positive-definiteness constraints and
-    structural graph diagnostics.
+    discrete-time panels with serially correlated factors (excluding white-noise
+    factor increments) to separate low-rank factor structure from
+    heteroskedastic idiosyncratic noise.

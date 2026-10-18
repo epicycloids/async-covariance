@@ -110,23 +110,24 @@ snapshot = online.snapshot(
   accumulating. When streaming series have a large trend relative to volatility,
   pass a baseline `reference_drift` to `OnlineCovariance` at construction and
   pass the target `drift` to `snapshot`. Supplying known `noise_variance`
-  corrects diagonal bias under independent additive point errors. Even with
-  diagonal bias removed, the variance of raw high-frequency return products
-  grows with sampling frequency under noisy infill sampling. `estimate_noise`
+  corrects diagonal bias under independent additive point errors; under noisy
+  infill sampling, the variance of covariance-rate estimates built from raw
+  return products still grows with sampling frequency. `estimate_noise`
   computes the unclipped adjacent-return autocovariance moment (unbiased under
   exogenous sampling, independent Brownian increments, correct drift centering,
   and independent point errors), and `coarsen` thins batch observations to the
-  last actual point per fixed time bucket.
+  last observation per fixed time bucket.
 - **Sparse graphs and factor projection**: Passing `edges=[(a, b), ...]`
   restricts off-diagonal work to selected pairs while tracking all diagonals.
   Assets without active increments have `NaN` in `MomentSnapshot.variance`;
   factor fitting requires positive finite marginal variances for all $`N`$
   assets (either observed or supplied via `variance=`). Unobserved off-diagonal
-  pairs receive zero loss weight. Default fitting weights are decay-weighted
-  overlap coverage (`weighted_coverage`), a support heuristic rather than
-  inverse estimation variance. `FactorFit.diagnostics` reports convergence metadata
-  and structural graph obstructions (such as disconnected components, bipartite
-  components, or row degrees below `rank`).
+  pairs receive zero loss weight. Default fitting weights use decay-weighted
+  overlap coverage (`weighted_coverage`), a shared-duration support heuristic
+  that scales each observed pair's loss term by its accumulated overlap time.
+  `FactorFit.diagnostics` reports convergence metadata and structural graph
+  obstructions (such as disconnected components, bipartite components, or row
+  degrees below `rank`).
 
 ## Verification and Benchmarks
 

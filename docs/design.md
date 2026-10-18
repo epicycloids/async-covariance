@@ -28,7 +28,7 @@ $`\max(s_e, s_f) < \min(u_e, u_f)`$; intervals that touch at a single endpoint
 ### Local revision mechanics
 
 Because each point $`(a, t_k)`$ is incident to at most two increments—its left
-increment $`[t_{k-1}, t_k)`$ and its right increment $`[t_k, t_{k+1})`$-any
+increment $`[t_{k-1}, t_k)`$ and its right increment $`[t_k, t_{k+1})`$—any
 point mutation modifies at most two existing increments and creates at most two
 replacement increments:
 
@@ -72,11 +72,11 @@ are indexed in an augmented treap (`IntervalIndex`):
   index serves as a stable `usize` handle stored on the originating `Point`.
 - **Tree ordering and heuristic balancing**: Nodes are ordered lexicographically
   by `(start, handle)`. Each inserted node receives a deterministic 64-bit
-  priority computed by applying the SplitMix64 finalizer (`mix64`) to a
+  heap priority computed by applying the SplitMix64 finalizer (`mix64`) to a
   monotonically increasing 64-bit insertion counter. Because priorities are
-  deterministic hashes of insertion sequence numbers rather than independent
-  random draws, logarithmic tree depth in the number of active intervals $`M`$
-  is an expected heuristic behavior rather than a worst-case guarantee.
+  deterministic hashes of insertion sequence numbers, logarithmic tree depth in
+  the number of active intervals $`M`$ is heuristic and has no worst-case
+  balance guarantee.
 - **Subtree augmentation and pruning**: Each node caches `max_end`, the maximum
   interval end timestamp in its subtree. To report all intervals overlapping a
   query $`[s, u)`$ (`start < other.end && other.start < end`):
@@ -95,14 +95,11 @@ $`O(\log M + q \log(M/q + 1))`$ time.
 
 When `edges` restricts off-diagonal tracking to a sparse graph $`\mathcal{E}`$
 where asset $`a`$ has incident degree
-$`d_a = \lvert \mathcal{N}(a) \rvert \ll N`$, querying a global interval tree
-across all $`N`$ assets would visit overlapping intervals belonging to assets
-not connected to $`a`$ in $`\mathcal{E}`$.
-
-Instead, when `edges` is provided, `Engine` builds sorted adjacency lists
-`neighbors[a]` and resolves overlaps for a changed interval
-$`I_e = [s_e, u_e)`$ of asset $`a`$ by querying `points[b]` directly for each
-neighbor $`b \in \mathcal{N}(a)`$:
+$`d_a = \lvert \mathcal{N}(a) \rvert \ll N`$, `Engine` builds sorted adjacency
+lists `neighbors[a]` across the $`N`$ assets so that overlap resolution for
+asset $`a`$ in $`\mathcal{E}`$ on a changed interval $`I_e = [s_e, u_e)`$ of
+asset $`a`$ queries `points[b]` directly for each neighbor
+$`b \in \mathcal{N}(a)`$:
 
 1. Because intervals of asset $`b`$ are pairwise disjoint, at most one interval
    of asset $`b`$ starting at or before $`s_e`$ can overlap $`I_e`$, namely the
@@ -127,8 +124,9 @@ in $`\mathcal{E}`$.
 
 ### Immutable batch scans (`src/batch.rs`)
 
-For one-shot estimation (`fit`) on $`L`$ input observations across $`N`$ assets,
-no dynamic revision index is built:
+For one-shot batch estimation (`fit`) on $`L`$ input observations across $`N`$
+assets, increments are partitioned per asset and scanned in place without
+constructing a dynamic interval tree:
 
 1. If the input `times` array is not already nondecreasing, Python applies a
    stable sort (`np.argsort(t, kind="stable")`) in $`O(L \log L)`$ time so that
@@ -190,7 +188,7 @@ When `window = Some(W)`, the active cutoff is $`c = t_{\max} - W`$:
      marked for pruning.
    - For each marked asset $`a`$, `points[a].split_off(&Time(c))` separates
      points at or after $`c`$ from points strictly before $`c`$. All points
-     before $`c`$ are discarded **except** the single latest point
+     before $`c`$ are discarded except the single latest point
      $`(t_{\text{sentinel}}, p_{\text{sentinel}})`$ with
      $`t_{\text{sentinel}} < c`$, which is re-inserted into `points[a]` with
      `next_interval = None`.
@@ -286,9 +284,8 @@ All 13 floating-point accumulators (indices `0..12` and `13`) use Neumaier
 compensated summation, which tracks the low-order rounding error whether the new
 term is smaller or larger in magnitude than the running sum (the latter
 occurring when a historical correction replaces a long interval). On the
-diagonal ($`a = b`$), index `6` is computed as `(r / l) * r` rather than
-`(r / sqrt(l))^2` to avoid premature underflow on short durations, and index
-`10` is set to the exact constant `1.0` rather than `(l / sqrt(l) / sqrt(l))^2`.
+diagonal ($`a = b`$), index `6` is computed as `(r / l) * r` to avoid premature
+underflow on short durations, and index `10` is set to the exact constant `1.0`.
 
 ### Numerical stability under large drift (`reference_drift`)
 
@@ -357,8 +354,7 @@ b_i = \sum_{j \in \mathcal{N}(i)} \tilde{w}_{ij} c_{ij} z_j \in \mathbb{R}^K.
 
 If $`b_i = 0`$, the minimum is attained at $`z = 0`$ and `quadratic_ball`
 returns immediately. When $`b_i \neq 0`$ and $`R > 0`$, `quadratic_ball` in
-`src/factor.rs` solves this convex subproblem in two stages without adding an
-artificial ridge penalty to $`G_i`$:
+`src/factor.rs` solves the convex subproblem for $`G_i`$ in two stages:
 
 1. **Scaled Cholesky interior fast path (`cholesky_interior`)**:
    Let $`s = \max_{p,q} \lvert (G_i)_{pq} \rvert`$. The solver attempts an
